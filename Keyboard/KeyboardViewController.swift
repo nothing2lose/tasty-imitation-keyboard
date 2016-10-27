@@ -243,7 +243,7 @@ class KeyboardViewController: UIInputViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         self.bannerView?.isHidden = false
-        self.keyboardHeight = self.heightForOrientation(self.interfaceOrientation, withTopBanner: true)
+        self.keyboardHeight = self.heightForOrientation(self.interfaceOrientation, withTopBanner: (bannerView != nil))
     }
     
     override func willRotate(to toInterfaceOrientation: UIInterfaceOrientation, duration: TimeInterval) {
@@ -258,7 +258,7 @@ class KeyboardViewController: UIInputViewController {
             }
         }
         
-        self.keyboardHeight = self.heightForOrientation(toInterfaceOrientation, withTopBanner: true)
+        self.keyboardHeight = self.heightForOrientation(toInterfaceOrientation, withTopBanner: (bannerView != nil))
     }
     
     override func didRotate(from fromInterfaceOrientation: UIInterfaceOrientation) {
@@ -305,42 +305,42 @@ class KeyboardViewController: UIInputViewController {
                         
                         switch key.type {
                         case Key.KeyType.keyboardChange:
-                            keyView.addTarget(self, action: "advanceTapped:", for: .touchUpInside)
+                            keyView.addTarget(self, action: #selector(advanceTapped(_:)), for: .touchUpInside)
                         case Key.KeyType.backspace:
                             let cancelEvents: UIControlEvents = [UIControlEvents.touchUpInside, UIControlEvents.touchUpInside, UIControlEvents.touchDragExit, UIControlEvents.touchUpOutside, UIControlEvents.touchCancel, UIControlEvents.touchDragOutside]
                             
-                            keyView.addTarget(self, action: "backspaceDown:", for: .touchDown)
-                            keyView.addTarget(self, action: "backspaceUp:", for: cancelEvents)
+                            keyView.addTarget(self, action: #selector(backspaceDown(_:)), for: .touchDown)
+                            keyView.addTarget(self, action: #selector(backspaceUp(_:)), for: cancelEvents)
                         case Key.KeyType.shift:
-                            keyView.addTarget(self, action: Selector("shiftDown:"), for: .touchDown)
-                            keyView.addTarget(self, action: Selector("shiftUp:"), for: .touchUpInside)
-                            keyView.addTarget(self, action: Selector("shiftDoubleTapped:"), for: .touchDownRepeat)
+                            keyView.addTarget(self, action: #selector(shiftDown(_:)), for: .touchDown)
+                            keyView.addTarget(self, action: #selector(shiftUp(_:)), for: .touchUpInside)
+                            keyView.addTarget(self, action: #selector(shiftDoubleTapped(_:)), for: .touchDownRepeat)
                         case Key.KeyType.modeChange:
-                            keyView.addTarget(self, action: Selector("modeChangeTapped:"), for: .touchDown)
+                            keyView.addTarget(self, action: #selector(modeChangeTapped(_:)), for: .touchDown)
                         case Key.KeyType.settings:
-                            keyView.addTarget(self, action: Selector("toggleSettings"), for: .touchUpInside)
+                            keyView.addTarget(self, action: #selector(toggleSettings), for: .touchUpInside)
                         default:
                             break
                         }
                         
                         if key.isCharacter {
                             if UIDevice.current.userInterfaceIdiom != UIUserInterfaceIdiom.pad {
-                                keyView.addTarget(self, action: Selector("showPopup:"), for: [.touchDown, .touchDragInside, .touchDragEnter])
-                                keyView.addTarget(keyView, action: Selector("hidePopup"), for: [.touchDragExit, .touchCancel])
-                                keyView.addTarget(self, action: Selector("hidePopupDelay:"), for: [.touchUpInside, .touchUpOutside, .touchDragOutside])
+                                keyView.addTarget(self, action: #selector(showPopup(_:)), for: [.touchDown, .touchDragInside, .touchDragEnter])
+                                keyView.addTarget(keyView, action: Selector("hidePopup"), for: [.touchDragExit, .touchCancel]) // #selector(hidePopup)
+                                keyView.addTarget(self, action: #selector(hidePopupDelay(_:)), for: [.touchUpInside, .touchUpOutside, .touchDragOutside])
                             }
                         }
                         
                         if key.hasOutput {
-                            keyView.addTarget(self, action: "keyPressedHelper:", for: .touchUpInside)
+                            keyView.addTarget(self, action: #selector(keyPressedHelper(_:)), for: .touchUpInside)
                         }
                         
                         if key.type != Key.KeyType.shift && key.type != Key.KeyType.modeChange {
-                            keyView.addTarget(self, action: Selector("highlightKey:"), for: [.touchDown, .touchDragInside, .touchDragEnter])
-                            keyView.addTarget(self, action: Selector("unHighlightKey:"), for: [.touchUpInside, .touchUpOutside, .touchDragOutside, .touchDragExit, .touchCancel])
+                            keyView.addTarget(self, action: #selector(highlightKey(_:)), for: [.touchDown, .touchDragInside, .touchDragEnter])
+                            keyView.addTarget(self, action: #selector(unHighlightKey(_:)), for: [.touchUpInside, .touchUpOutside, .touchDragOutside, .touchDragExit, .touchCancel])
                         }
                         
-                        keyView.addTarget(self, action: Selector("playKeySound"), for: .touchDown)
+                        keyView.addTarget(self, action: #selector(playKeySound), for: .touchDown)
                     }
                 }
             }
@@ -795,7 +795,6 @@ class KeyboardViewController: UIInputViewController {
         if !UserDefaults.standard.bool(forKey: kKeyboardClicks) {
             return
         }
-        
         DispatchQueue.global(priority: DispatchQueue.GlobalQueuePriority.default).async(execute: {
             AudioServicesPlaySystemSound(1104)
         })
